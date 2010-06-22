@@ -10,27 +10,50 @@ package cmdLine
  *  val posValue = PositionValue(0) 
  * } 
  */
-trait CmdLine {
-	class CmdLineException(msg: String) extends Exception(msg) {
-		def this(argName: String, format: ArgumentFormat, args: List[String]) = this("Argument '" + argName + "' with format '" + format + "' not found in " + args)
-	}
-	
-	val argsString : Option[String]
-	
-	lazy val args : List[String] = argsString match { case Some(string) => string.split(" +").toList; case None => null }
+class CmdLineException(msg: String) extends Exception(msg) {
+	def this(argName: String, format: ArgumentFormat, args: List[String]) = this("Argument '" + argName + "' with format '" + format + "' not found in " + args)
+}
 
-	lazy val defaultFormat = new ArgumentFormat("-", "=")
+class Value(val prefix: Option[String], val keyword: Option[List[String]], val separator: String) {
+	def extract(args: List[String]): Option[String] = {
+		keyword match {
+			case Some(keyword) => {
+				val patterns = for(str <- keyword)
+					yield ("^" + (prefix getOrElse "") + str + separator + """(.+)$""").r
+				val matches = 
+					for(Pattern <- patterns; arg <- args)
+						yield { 
+							arg match { 
+								case Pattern(x) => Some(x) 
+								case _ => None
+							}
+						}
+				val filteredMatches = matches.filter(_ != None).map(_.get)
+				if(filteredMatches.length == 1)
+					Some(filteredMatches(0))
+				else
+					None
+			}
+			case None => {
+				val Pattern = ("^" + (prefix getOrElse "") + "(.+)$").r
+				if(args.length > 0) {
+					args(0) match {
+						case Pattern(x) => Some(x)
+						case _ => None
+					}
+				}
+				else 
+					None
+			}
+		}
+	}
+}
+
+trait CmdLine {
+	val argsString : String
 	
-	lazy val defaultExtractedArgs = { println(args); args.map(defaultFormat.extract(_)) }
 	
-	def Value(name : String, format: ArgumentFormat = defaultFormat): CmdLineArgument = {
-		val extractedArgs = if(format == defaultFormat) 
-								defaultExtractedArgs
-							else 
-								args.map(format.extract(_))
-		val argsMap = extractedArgs.filter(_ != None).map(_.get).foldRight(Map[String, String]())( (a, b) => { b(a._1) = a._2 } )
-		if(argsMap.contains(name)) new CmdLineArgument(argsMap(name)) else throw new CmdLineException(name, format, args)
-	} 
+
 }
 
 

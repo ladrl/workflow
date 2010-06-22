@@ -4,6 +4,25 @@ import org.scalatest.FlatSpec
 import org.scalatest.matchers.MustMatchers
 
 class CmdLineTest extends FlatSpec with MustMatchers {
+	{
+		val value = new Value(Some("-"), Some("-Test" :: "t":: Nil), "=")
+		"A Value with keyword" must "extract its assigned keyword" in {
+			val args = "-t=Result" :: "/Test2:Result2" :: Nil
+			value.extract(args) must be (Some("Result"))
+		}
+		
+		it must "extract None when the keyword is not available" in {
+			val args = "-q=Result" :: "/Test2:Result2" :: Nil
+			value.extract(args) must be (None)
+		}
+	}
+	
+	"A Value only keyword" must "extract the first argument available" in {
+		val args = "Position1" :: Nil
+		val value = new Value(None, None, "")
+		value.extract(args) must be (Some(args(0)))
+	}
+	/*
 	"""CmdLineArgument("123").asInt """ should "be equal to 123" in {
 		
 		val arg = new CmdLineArgument("123")
@@ -48,5 +67,5 @@ class CmdLineTest extends FlatSpec with MustMatchers {
 		obj.test must be (333)
 		obj.test1 must be (2.3f)
 		obj.test2 must be ("booo")
-	}
+	} */
 }
