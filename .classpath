@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<classpath>
+<classpathentry kind="src" path="./src/test/scala" output="./target/scala_2.8.0.RC2/test-classes" including="**/*.scala" />
+<classpathentry kind="src" path="./src/main/scala" including="**/*.scala" />
+<classpathentry kind="lib" path="lib_managed/scala_2.8.0.RC2/compile/aopalliance-1.0.jar" />
+<classpathentry kind="lib" path="lib_managed/scala_2.8.0.RC2/test/scalatest-1.0.1-for-scala-2.8.0.RC1-SNAPSHOT.jar" />
+<classpathentry kind="lib" path="lib_managed/scala_2.8.0.RC2/compile/guice-2.0.jar" />
+<classpathentry kind="con" path="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER" />
+<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER" />
+<classpathentry kind="output" path="./target/scala_2.8.0.RC2/classes" />
+</classpath>

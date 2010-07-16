@@ -1,0 +1,7 @@
+target
+lib_managed
+project/build/target
+project/plugins/target
+**.gitignore
+**.DS_Store
+src/main/resources/boot
