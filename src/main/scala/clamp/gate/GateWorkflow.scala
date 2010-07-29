@@ -1,21 +1,35 @@
 package clamp.gate
 
-abstract class WorkflowTemplate {
-	
-	type Message
-	type Action[T <: Message] = Function[T, Unit]
-	type Condition[T <: Message] = Function[T, Boolean]
-
-	case class Path[T <: Message](val condition: Condition[T], val next: WorkflowEntry[T])
-
-/*
-	type Dispatcher[T <: Message] extends PartialFunction[T, Workflow]
-	trait Dispatcher[T <: Message] {
-		def dispatch(msg: T)
+trait State[T]{
+	protected val state: T
+	def unit(state: T): State[T]
+	def flatMap[B](f: T => State[B]) : State[B] = {
+		f(state)
 	}
-*/
-	case class WorkflowEntry[T <: Message](val action: Action[T], val paths: List[Path[T]])
+	def map(f: (T) => T): State[T] = {
+		this.flatMap { x:T =>
+			val content: T = f(x)
+			unit(content)
+		}
+	}
 }
+
+trait WorkflowEntry[M] {
+	val action: (M) => Unit
+	val nextEntry: (M) => WorkflowEntry[M]
+	val workPending: Boolean
+}
+
+case class Work[M](val action: (M) => Unit, val nextEntry: (M) => WorkflowEntry[M]) extends WorkflowEntry[M] {
+	val workPending = true
+}
+
+case class End[M]() extends WorkflowEntry[M] {
+	override val action: (M) => Unit = _ => ()
+	override val nextEntry: (M) => WorkflowEntry[M] = (_) => this
+	val workPending = false
+}
+
 /*
 
 ======================
@@ -36,7 +50,7 @@ Definitons
  Dispatcher : A function which triggers workflows as a reaction to incoming messages.
  Todo       : A container for ongoing workflows.
 
- WorkflowEntry : Structural element which make up a Workflow, containing the Action and the Paths from it.
+ WorkflowEntry : 
 
 
 Relations
