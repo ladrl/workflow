@@ -1,34 +1,26 @@
 package clamp.gate
 
-trait State[T]{
-	protected val state: T
-	def unit(state: T): State[T]
-	def flatMap[B](f: T => State[B]) : State[B] = {
-		f(state)
-	}
-	def map(f: (T) => T): State[T] = {
-		this.flatMap { x:T =>
-			val content: T = f(x)
-			unit(content)
-		}
-	}
+trait Monad[M[+_], +A] {
+	def unit[T](a: T): M[T]
+	def flatMap[B](f: A => M[B]) : M[B]
 }
 
-trait WorkflowEntry[M] {
-	val action: (M) => Unit
-	val nextEntry: (M) => WorkflowEntry[M]
-	val workPending: Boolean
+trait Stateful[+S] extends Monad[Stateful, S] {
+	val s: S
+	override def unit[T](a:T):Stateful[T]
+	override def flatMap[B](f: S => Stateful[B]): Stateful[B] = f(s)
 }
 
-case class Work[M](val action: (M) => Unit, val nextEntry: (M) => WorkflowEntry[M]) extends WorkflowEntry[M] {
-	val workPending = true
+case class State[+S](val s: S) extends Stateful[S] {
+	override def unit[A](a:A) = State(a)
 }
 
-case class End[M]() extends WorkflowEntry[M] {
-	override val action: (M) => Unit = _ => ()
-	override val nextEntry: (M) => WorkflowEntry[M] = (_) => this
-	val workPending = false
+case object End extends Stateful[Nothing] {
+	val s: Nothing = throw new Exception("Trying to flatMap on End")
+	override def unit[A](a:A) = End
 }
+
+//case object End extends WorkflowEntry[Nothing, Nothing]((Nothing) => (), (Nothing) => End)
 
 /*
 
