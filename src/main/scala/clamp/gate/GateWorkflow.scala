@@ -6,7 +6,7 @@ trait Monad[M[+_], +A] {
 }
 
 trait Stateful[+S] extends Monad[Stateful, S] {
-	val s: S
+	def s: S
 	override def unit[T](a:T):Stateful[T]
 	override def flatMap[B](f: S => Stateful[B]): Stateful[B] = f(s)
 }
@@ -16,11 +16,9 @@ case class State[+S](val s: S) extends Stateful[S] {
 }
 
 case object End extends Stateful[Nothing] {
-	val s: Nothing = throw new Exception("Trying to flatMap on End")
+	def s: Nothing = throw new Exception("Trying to flatMap on End")
 	override def unit[A](a:A) = End
 }
-
-//case object End extends WorkflowEntry[Nothing, Nothing]((Nothing) => (), (Nothing) => End)
 
 /*
 
