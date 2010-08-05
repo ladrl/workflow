@@ -1,24 +1,44 @@
 package clamp.gate
 
+/**
+ * Create a Monad using a type constructor M taking a covariant type as parameter. Usually, a monad has a unit method returning a 
+ * new instance, but this is currently done using case class.
+ * flatMap allows to treat the Monad as some type S while not having direct access to its instance.
+**/
 trait Monad[M[+_], +A] {
 	def flatMap[B](f: A => M[B]) : M[B]
 }
 
+/**
+ * A monad encapsulating some sort of state, of type S.
+ * Using def but val to declare state allows implementing classes to _not_ have a state, like End does.
+**/
 trait Stateful[+S] extends Monad[Stateful, S] {
-	def s: S
-	override def flatMap[B](f: S => Stateful[B]): Stateful[B] = f(s)
+	def state: S
+	override def flatMap[B](f: S => Stateful[B]): Stateful[B] = f(state)
 }
 
-case class State[S](val s: S) extends Stateful[S] 
+/**
+ * An actual State monad of type S
+**/
+case class State[+S](val state: S) extends Stateful[S]
 
-
+/**
+ * Transform is the host for the curring function which takes the actual transformation function, the state monad 
+ * containing the state to transform and then some sort of message as a parameter to the transformation. This 
+ * allow to build constructs like a statemachine or a workflow, using m and state to decide which state comes next.
+**/
 object Transform
 {
 	def apply[S, M](f: (S, M) => Stateful[S])(s: Stateful[S])(m: M) = s flatMap { s => f(s, m) }
 }
 
+/**
+ * A generally usable termination state, similar to None or Nil in the sense that its compatible with any 
+ * type parameters a State may carry.
+**/
 case object End extends Stateful[Nothing] {
-	def s: Nothing = throw new Exception("Trying to flatMap on End")
+	def state: Nothing = throw new Exception("Trying to flatMap on End")
 }
 
 
