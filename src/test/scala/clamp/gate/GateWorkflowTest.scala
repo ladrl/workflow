@@ -20,7 +20,22 @@ class StateTest extends FlatSpec with MustMatchers {
 			End flatMap {x: Int => State(x + 100) }
 		} must produce [Exception]
 	}
-
+	
+	
+	"A transformation" must "return a new stateful when applied with a message" in {
+		val s = State("")
+		val t = Transform({ (s:String, m:Int) => if( m > 0) State(s + ", %d" format m) else End }) _
+		
+		val s2 = t (s) (1)
+		t (s2) (2) must be (State(", 1, 2"))
+		t (s2) (0) must be (End)
+		
+		evaluating {
+			t (End) (0)
+		} must produce [Exception]
+	}
+	
+	
 }
 
 

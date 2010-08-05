@@ -1,24 +1,26 @@
 package clamp.gate
 
 trait Monad[M[+_], +A] {
-	def unit[T](a: T): M[T]
 	def flatMap[B](f: A => M[B]) : M[B]
 }
 
 trait Stateful[+S] extends Monad[Stateful, S] {
 	def s: S
-	override def unit[T](a:T):Stateful[T]
 	override def flatMap[B](f: S => Stateful[B]): Stateful[B] = f(s)
 }
 
-case class State[+S](val s: S) extends Stateful[S] {
-	override def unit[A](a:A) = State(a)
+case class State[S](val s: S) extends Stateful[S] 
+
+
+object Transform
+{
+	def apply[S, M](f: (S, M) => Stateful[S])(s: Stateful[S])(m: M) = s flatMap { s => f(s, m) }
 }
 
 case object End extends Stateful[Nothing] {
 	def s: Nothing = throw new Exception("Trying to flatMap on End")
-	override def unit[A](a:A) = End
 }
+
 
 /*
 
