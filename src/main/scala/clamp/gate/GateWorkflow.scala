@@ -23,6 +23,16 @@ trait Stateful[+S] extends Monad[Stateful, S] {
 **/
 case class State[+S](val state: S) extends Stateful[S]
 
+object T {
+	type TF[M] = Function1[M, Transformable[M]]
+}
+
+trait Transformable[M] extends Stateful[T.type#TF[M]] {
+	def state = chooseNextState
+	def chooseNextState: T.type#TF[M]
+}
+
+
 /**
  * Transform is the host for the curring function which takes the actual transformation function, the state monad 
  * containing the state to transform and then some sort of message as a parameter to the transformation. This 

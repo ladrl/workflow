@@ -38,6 +38,47 @@ class StateTest extends FlatSpec with MustMatchers {
 	
 }
 
+class TransformableTest extends FlatSpec with MustMatchers {
+	"A transformable" must "be able to return itself" in {
+		val infinite = new Transformable[Int] {
+			def chooseNextState = (i: Int) => this
+		}
+		(infinite chooseNextState(0)) must be (infinite)
+	}
+	
+	it must "be able to return some other transformable" in {
+		val second = new Transformable[Int] {
+			def chooseNextState = (i: Int) => this
+		}
+		
+		val first = new Transformable[Int] {
+			def chooseNextState = (i: Int) => second
+		}
+		
+		(first chooseNextState(0)) must be (second)
+	}
+	
+	it must "be able to return alternatively one or another transformable" in {
+		val left = new Transformable[Int] {
+			def chooseNextState = (i: Int) => this
+		}
+		val right = new Transformable[Int] {
+			def chooseNextState = (i: Int) => this
+		}
+		val choose = new Transformable[Int] {
+			def chooseNextState = (i: Int) => i match {
+				case 0 => left
+				case _ => right
+			}
+		}
+		
+		(choose chooseNextState(0)) must be=== (left)
+		(choose chooseNextState(1)) must be=== (right)
+	}
+
+
+}
+
 
 class GateWorkflowTest extends FlatSpec with MustMatchers {
 	

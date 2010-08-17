@@ -1,0 +1,18 @@
+package workflow.Sample
+
+workflow "Check commit message" when {
+	case CommitRequest("release-repo", msg) => process(msg)
+}
+check {
+	case """.+\n{1,2}.+""".r => proceed
+	case _ => refuse("Commit message needs to have a subject line and a description block")
+	}
+check { request =>
+	for(ref <- request references; bug <- bugtracker get ref; task <- tasktracker get ref)
+	{
+		
+	}
+}	
+then {
+	confirm
+}	
