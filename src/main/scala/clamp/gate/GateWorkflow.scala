@@ -18,39 +18,26 @@ trait Stateful[+S] extends Monad[Stateful, S] {
 	override def flatMap[B](f: S => Stateful[B]): Stateful[B] = f(state)
 }
 
-/**
- * An actual State monad of type S
-**/
-case class State[+S](val state: S) extends Stateful[S]
-
-object T {
-	type TF[M] = Function1[M, Transformable[M]]
+object Transformable {
+	type TF[-M] = Function1[M, Transformable[M]]
 }
 
-trait Transformable[M] extends Stateful[T.type#TF[M]] {
+
+trait Transformable[-M] extends Stateful[Transformable.type#TF[M]] {
 	def state = chooseNextState
-	def chooseNextState: T.type#TF[M]
+	def chooseNextState: Transformable.type#TF[M]
 }
 
-
-/**
- * Transform is the host for the curring function which takes the actual transformation function, the state monad 
- * containing the state to transform and then some sort of message as a parameter to the transformation. This 
- * allow to build constructs like a statemachine or a workflow, using m and state to decide which state comes next.
-**/
-object Transform
-{
-	def apply[S, M](f: (S, M) => Stateful[S])(s: Stateful[S])(m: M) = s flatMap { s => f(s, m) }
+object State {
+	def apply[M](f: Transformable.type#TF[M]) = new State[M](f)
+}
+class State[-M](val chooseNextState: Transformable.type#TF[M]) extends Transformable[M] {
+	def apply(m: M) = chooseNextState(m)
 }
 
-/**
- * A generally usable termination state, similar to None or Nil in the sense that its compatible with any 
- * type parameters a State may carry.
-**/
-case object End extends Stateful[Nothing] {
-	def state: Nothing = throw new Exception("Trying to flatMap on End")
+case object TEnd extends Transformable[Any] {
+	def chooseNextState = (_) => this
 }
-
 
 /*
 
